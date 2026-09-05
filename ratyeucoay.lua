@@ -24,9 +24,8 @@ local RareBosses = {
 }
 
 local LastState = {}
-local ActiveMoon
-local ActiveHaki
-local ActiveBerries = {}
+local LastMoonPhase
+local LastHaki
 
 local function SendNotify(data)
     task.spawn(function()
@@ -83,35 +82,38 @@ local function UpdateState(key, active, eventType, extra)
     end
 end
 
-local function GetMoonPhase()
+local function GetFullMoon()
     local phase = Lighting:GetAttribute("MoonPhase")
     local clock = math.floor(Lighting.ClockTime)
+
     if phase == 5 and (clock >= 12 or clock < 5) then
         return "Full Moon"
     end
+
     if phase == 4 then
         return "Next Night"
     end
+
     return nil
 end
 
 local function UpdateMoon()
-    local moon = GetMoonPhase()
+    local moon = GetFullMoon()
 
     if not moon then
-        if ActiveMoon then
+        if LastMoonPhase then
             SendEvent("Moon", false, {
-                MoonPhase = ActiveMoon
+                MoonPhase = LastMoonPhase
             })
 
-            ActiveMoon = nil
+            LastMoonPhase = nil
         end
 
         return
     end
 
-    if not ActiveMoon then
-        ActiveMoon = moon
+    if not LastMoonPhase then
+        LastMoonPhase = moon
 
         SendEvent("Moon", true, {
             MoonPhase = moon
@@ -120,12 +122,12 @@ local function UpdateMoon()
         return
     end
 
-    if ActiveMoon ~= moon then
+    if LastMoonPhase ~= moon then
         SendEvent("Moon", false, {
-            MoonPhase = ActiveMoon
+            MoonPhase = LastMoonPhase
         })
 
-        ActiveMoon = moon
+        LastMoonPhase = moon
 
         SendEvent("Moon", true, {
             MoonPhase = moon
@@ -148,7 +150,6 @@ local function HasCastle()
             if v:IsA("Model")
                 and v.Name ~= "Blank Buddy"
                 and (v:GetPivot().Position - origin).Magnitude <= 3000 then
-
                 return true
             end
         end
@@ -200,29 +201,26 @@ end
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
-
-
             local haki = CommF:InvokeServer(
                 "ColorsDealer",
                 "1"
             )
 
-            if haki ~= ActiveHaki then
-
-                if ActiveHaki then
+            if haki ~= LastHaki then
+                if LastHaki then
                     SendEvent("Legendary", false, {
-                        Haki = ActiveHaki
+                        Haki = LastHaki
                     })
                 end
 
-                ActiveHaki = haki
-                if ActiveHaki then
+                LastHaki = haki
+
+                if LastHaki then
                     SendEvent("Legendary", true, {
-                        Haki = ActiveHaki
+                        Haki = LastHaki
                     })
                 end
             end
-
 
             for _, boss in ipairs(RareBosses) do
                 UpdateState(
@@ -234,7 +232,6 @@ task.spawn(function()
                     }
                 )
             end
-
 
             UpdateState(
                 "Prehistoric",
@@ -258,24 +255,25 @@ task.spawn(function()
 
             UpdateMoon()
 
-
             if SeaIndex == 3 then
                 local berry = GetBerry()
 
-                if berry then
-                    -- Berry mới
-                    if not ActiveBerries[berry] then
-                        ActiveBerries[berry] = true
+                if berry and not LastState["Berry:" .. berry] then
+                    LastState["Berry:" .. berry] = true
 
-                        SendEvent("Berry", true, {
-                            Berry = berry
-                        })
-                    end
+                    SendEvent("Berry", true, {
+                        Berry = berry
+                    })
                 end
 
-                for oldBerry in pairs(ActiveBerries) do
-                    if oldBerry ~= berry then
-                        ActiveBerries[oldBerry] = nil
+                for key, state in pairs(LastState) do
+                    if state
+                        and key:sub(1, 6) == "Berry:"
+                        and key ~= (berry and ("Berry:" .. berry)) then
+
+                        local oldBerry = key:sub(7)
+
+                        LastState[key] = nil
 
                         SendEvent("Berry", false, {
                             Berry = oldBerry
