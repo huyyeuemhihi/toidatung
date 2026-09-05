@@ -18,10 +18,10 @@ local WorkerURL = "https://nf.quachlehuyy.workers.dev/notify"
 local RareBosses = {
     "rip_indra True Form",
     "Dough King",
+    "Cake Prince",
     "Soul Reaper",
     "Darkbeard",
-    "Cursed Captain",
-    "Cake Prince"
+    "Cursed Captain"
 }
 
 local LastState = {}
