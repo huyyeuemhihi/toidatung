@@ -15,6 +15,17 @@ local Player = Players.LocalPlayer
 local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
 local WorkerURL = "https://nf.quachlehuyy.workers.dev/notify"
 
+local SeaIndex = ({
+    [2753915549] = 1,
+    [85211729168715] = 1,
+
+    [4442272183] = 2,
+    [79091703265657] = 2,
+
+    [7449423635] = 3,
+    [100117331123089] = 3,
+})[game.PlaceId]
+
 local RareBosses = {
     "rip_indra True Form",
     "Dough King",
@@ -179,12 +190,8 @@ local function HasRareBoss(name)
 end
 
 local function GetBerry()
-    for _, bush in ipairs(
-        CollectionService:GetTagged("BerryBush")
-    ) do
-        for _, berryName in pairs(
-            bush:GetAttributes()
-        ) do
+    for _, bush in ipairs(CollectionService:GetTagged("BerryBush")) do
+        for _, berryName in pairs(bush:GetAttributes()) do
             if (
                 not BerryArray
                 or table.find(BerryArray, berryName)
@@ -202,48 +209,61 @@ end
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
-            local haki = CommF:InvokeServer(
-                "ColorsDealer",
-                "1"
-            )
 
-            if haki ~= LastHaki then
-                if LastHaki then
-                    SendEvent("Legendary", false, {
-                        Haki = LastHaki
-                    })
-                end
+            -- Haki: Sea 2, 3
+            if SeaIndex == 2 or SeaIndex == 3 then
+                local haki = CommF:InvokeServer(
+                    "ColorsDealer",
+                    "1"
+                )
 
-                LastHaki = haki
+                if haki ~= LastHaki then
+                    if LastHaki then
+                        SendEvent("Legendary", false, {
+                            Haki = LastHaki
+                        })
+                    end
 
-                if LastHaki then
-                    SendEvent("Legendary", true, {
-                        Haki = LastHaki
-                    })
+                    LastHaki = haki
+
+                    if LastHaki then
+                        SendEvent("Legendary", true, {
+                            Haki = LastHaki
+                        })
+                    end
                 end
             end
 
-            for _, boss in ipairs(RareBosses) do
+            -- Rare Boss: Sea 2, 3
+            if SeaIndex == 2 or SeaIndex == 3 then
+                for _, boss in ipairs(RareBosses) do
+                    UpdateState(
+                        "Boss:" .. boss,
+                        HasRareBoss(boss),
+                        "Rare Boss",
+                        {
+                            ["Rare Boss"] = boss
+                        }
+                    )
+                end
+            end
+
+            -- Prehistoric: Sea 3
+            if SeaIndex == 3 then
                 UpdateState(
-                    "Boss:" .. boss,
-                    HasRareBoss(boss),
-                    "Rare Boss",
+                    "Prehistoric",
+                    HasPrehistoric(),
+                    "Island",
                     {
-                        ["Rare Boss"] = boss
+                        ["Prehistoric Island"] = true
                     }
                 )
             end
 
-            UpdateState(
-                "Prehistoric",
-                HasPrehistoric(),
-                "Island",
-                {
-                    ["Prehistoric Island"] = true
-                }
-            )
-
+            -- Moon: Sea 3
             if SeaIndex == 3 then
+                UpdateMoon()
+
                 UpdateState(
                     "Mirage",
                     GetMirage(),
@@ -252,11 +272,7 @@ task.spawn(function()
                         Mirage = true
                     }
                 )
-            end
 
-            UpdateMoon()
-
-            if SeaIndex == 3 then
                 local berry = GetBerry()
 
                 if berry and not LastState["Berry:" .. berry] then
@@ -287,6 +303,32 @@ task.spawn(function()
                     HasCastle(),
                     "Castle"
                 )
+            else
+                -- Berry: all Sea
+                local berry = GetBerry()
+
+                if berry and not LastState["Berry:" .. berry] then
+                    LastState["Berry:" .. berry] = true
+
+                    SendEvent("Berry", true, {
+                        Berry = berry
+                    })
+                end
+
+                for key, state in pairs(LastState) do
+                    if state
+                        and key:sub(1, 6) == "Berry:"
+                        and key ~= (berry and ("Berry:" .. berry)) then
+
+                        local oldBerry = key:sub(7)
+
+                        LastState[key] = nil
+
+                        SendEvent("Berry", false, {
+                            Berry = oldBerry
+                        })
+                    end
+                end
             end
         end)
     end
