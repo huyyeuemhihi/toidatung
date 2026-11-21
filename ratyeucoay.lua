@@ -32,7 +32,8 @@ local RareBosses = {
     "Cake Prince",
     "Soul Reaper",
     "Darkbeard",
-    "Cursed Captain"
+    "Cursed Captain",
+    "Tyrant of the Skies"
 }
 
 local LastState = {}
