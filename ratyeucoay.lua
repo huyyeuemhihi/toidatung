@@ -18,7 +18,7 @@ for key, value in pairs({Url = "https://nf.quachlehuyy.workers.dev/notify", Toke
     if Config[key] == nil then Config[key] = value end
 end
 local Sea = ({[2753915549]=1,[85211729168715]=1,[4442272183]=2,[79091703265657]=2,[7449423635]=3,[100117331123089]=3})[game.PlaceId] or 0
-local BossSea = {["rip_indra True Form"]=3,["Dough King"]=3,["Cake Prince"]=3,["Soul Reaper"]=3,
+local BossSea = {["rip_indra True Form"]=3,["Dough King"]=3,["Cake Prince"]=3,["Soul Reaper"]=3,["Cake Queen"]=3,
     ["Darkbeard"]=2,["Cursed Captain"]=2,["Tyrant of the Skies"]=3}
 local CastleMobs = {["Pirate Millionaire"]=true,["Pistol Billionaire"]=true,["Dragon Crew Warrior"]=true,["Dragon Crew Archer"]=true}
 local BossWatches = setmetatable({}, {__mode = "k"})
