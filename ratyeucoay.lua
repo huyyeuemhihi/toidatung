@@ -4,12 +4,11 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
-local CollectionService = game:GetService("CollectionService")
 local Player = Players.LocalPlayer
 local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
 local previous = getgenv().DwacTrackNotifier
 if previous and previous.Stop then previous.Stop() end
-local Runtime = {Running = true, Threads = {}, Connections = {}, DeadBosses = {}, Stable = {}, Candidates = {}}
+local Runtime = {Running = true, Version = "2026.11.27-no-berry", JobId = game.JobId, Threads = {}, Connections = {}, DeadBosses = {}, Stable = {}, Candidates = {}}
 getgenv().DwacTrackNotifier = Runtime
 local Config = getgenv().DwacNotifyConfig or {}
 getgenv().DwacNotifyConfig = Config
@@ -115,22 +114,8 @@ local function ScanCastle()
     end
     return {}
 end
-local function ScanBerries()
-    local events, seen = {}, {}
-    for _, bush in ipairs(CollectionService:GetTagged("BerryBush")) do
-        if bush:IsDescendantOf(Workspace) then
-            for _, value in pairs(bush:GetAttributes()) do
-                if type(value) == "string" and #value > 5 and #value <= 72 and value:match("Berry$") and not seen[value] then
-                    seen[value] = true
-                    events[#events+1] = {Berry=value,Confirmed=true,Evidence="BushAttribute"}
-                end
-            end
-        end
-    end
-    return events
-end
 local function SortEvents(events)
-    table.sort(events, function(a,b) return (a.Name or a.Berry or a.Haki or a.MoonPhase or "") < (b.Name or b.Berry or b.Haki or b.MoonPhase or "") end)
+    table.sort(events, function(a,b) return (a.Name or a.Haki or a.MoonPhase or "") < (b.Name or b.Haki or b.MoonPhase or "") end)
 end
 local function Observe(kind, callback)
     local ok, events = pcall(callback)
@@ -153,7 +138,7 @@ local function Observe(kind, callback)
 end
 local function Snapshot()
     local observations, hasEvents, hashParts, capturedDeaths = {}, false, {}, {}
-    for _, kind in ipairs({"Rare Boss","Moon","Mirage","Castle","Island","Legendary","Berry"}) do
+    for _, kind in ipairs({"Rare Boss","Moon","Mirage","Castle","Island","Legendary"}) do
         local stable = Runtime.Stable[kind]
         local knownFor = kind == "Legendary" and 45 or 5
         if stable and os.clock()-stable.KnownAt <= knownFor and (kind ~= "Legendary" or Runtime.HakiKnown) then
@@ -191,7 +176,6 @@ Spawn(function()
             Observe("Island",function() return ScanIsland("PrehistoricIsland","Prehistoric Island") end)
             Observe("Castle",ScanCastle)
         end
-        Observe("Berry",ScanBerries)
         task.wait(math.max(0.5,tonumber(Config.ScanSeconds) or 1))
     end
 end)
